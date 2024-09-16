@@ -18,7 +18,7 @@
 #' less_than_zero(c(-1,0,1,2,3,4))
 #' [1] TRUE FALSE FALSE FALSE FALSE FALSE
 less_than_zero <- function(x) {
-   return(x < 2)
+   return(x < 0)
 }
 
 #' Evaluate whether the argument is between two numbers
