@@ -18,7 +18,7 @@
 #' less_than_zero(c(-1,0,1,2,3,4))
 #' [1] TRUE FALSE FALSE FALSE FALSE FALSE
 less_than_zero <- function(x) {
-    return(NULL)
+   return(x < 2)
 }
 
 #' Evaluate whether the argument is between two numbers
@@ -44,7 +44,7 @@ less_than_zero <- function(x) {
 #' [2,]  TRUE FALSE FALSE
 #' [3,] FALSE FALSE FALSE
 is_between <- function(x, a, b) {
-    return(NULL)
+    return(x > a & x < b)
 }
 
 #' Return the values of the input vector that are not NA
@@ -61,7 +61,7 @@ is_between <- function(x, a, b) {
 #' rm_na(x)
 #' [1] 1 2 3
 rm_na <- function(x) {
-    return(NULL)
+    return(x[!is.na(x)])
 }
 
 #' Calculate the median of each row of a matrix
@@ -77,10 +77,13 @@ rm_na <- function(x) {
 #' @examples
 #' m <- matrix(1:9, nrow=3, byrow=T)
 #' row_medians(m)
-#' [1] 1 4 7
+#' [1] 2 5 8
 #' 
 row_medians <- function(x) {
-    return(NULL)
+  if (!is.matrix(x)) {
+    stop("Input must be a numeric matrix.")
+  }
+    return(apply(x, 1, median))
 }
 
 #' Evaluate each row of a matrix with a provided function
@@ -105,7 +108,10 @@ row_medians <- function(x) {
 #' summarize_rows(m, mean)
 #' [1] 2 5 8
 summarize_rows <- function(x, fn, na.rm=FALSE) {
-    return(NULL)
+  if (na.rm){
+      return(apply(x,1,fn,na.rm=TRUE))
+  }
+    return(apply(x,1,fn))
 }
 
 #' Summarize matrix rows into data frame
@@ -123,7 +129,7 @@ summarize_rows <- function(x, fn, na.rm=FALSE) {
 #'   * num_na - the number of missing (NA) values (ignoring value of na.rm)
 #'
 #' @param x (numeric matrix): matrix to evaluate the function along rows
-#' @param na.rm (logical) OPTIONAL: a logical evaluating to `TRUE` or `FALSE`
+#' @param na.rm (logic›al) OPTIONAL: a logical evaluating to `TRUE` or `FALSE`
 #'   indicating whether `NA` values should be stripped before computing summary
 #'
 #' @return (data frame) data frame containing summarized values for each row of `x`
@@ -145,22 +151,70 @@ summarize_rows <- function(x, fn, na.rm=FALSE) {
 #' 3 -0.09040182 1.027559 -0.02774705 -3.026888 2.353087      130              54      0
 #' 4  0.09518138 1.030461  0.11294781 -3.409049 2.544992       90              72      0
 summarize_matrix <- function(x, na.rm=FALSE) {
-    return(NULL)
+  if (!is.matrix(x)) {
+    stop("Input must be a numeric matrix.")
+  }
+  
+  # Initialize the results data frame
+  result <- data.frame(
+    mean = numeric(nrow(x)),
+    stdev = numeric(nrow(x)),
+    median = numeric(nrow(x)),
+    min = numeric(nrow(x)),
+    max = numeric(nrow(x)),
+    num_lt_0 = numeric(nrow(x)),
+    num_btw_1_and_5 = numeric(nrow(x)),
+    num_na = numeric(nrow(x))
+  )
+  
+  for (i in 1:nrow(x)) {
+    row_data <- x[i, ]
+    
+    # Calculate various indicators
+    result$mean[i] <- if (na.rm) mean(row_data, na.rm=TRUE) else mean(row_data)
+    result$stdev[i] <- if (na.rm) sd(row_data, na.rm=TRUE) else sd(row_data)
+    result$median[i] <- if (na.rm) median(row_data, na.rm=TRUE) else median(row_data)
+    result$min[i] <- if (na.rm) min(row_data, na.rm=TRUE) else min(row_data)
+    result$max[i] <- if (na.rm) max(row_data, na.rm=TRUE) else max(row_data)
+    result$num_lt_0[i] <- sum(row_data < 0, na.rm=na.rm)
+    result$num_btw_1_and_5[i] <- sum(row_data > 1 & row_data < 5, na.rm=na.rm)
+    result$num_na[i] <- sum(is.na(row_data))
+  }
+  
+    return(result)
 }
 
 # ------------ Helper Functions Used By Assignment, You May Ignore ------------
 sample_normal <- function(n, mean=0, sd=1) {
-    return(NULL)
+  set.seed(1337)
+  samples <- rnorm(n, mean=mean, sd=sd)
+  return(samples)
 }
 
 sample_normal_w_missing <- function(n, mean=0, sd=1, missing_frac=0.1) {
-    return(NULL)
+  set.seed(1337)
+  samples <- rnorm(n, mean=mean, sd=sd)
+  missing <- rbinom(length(samples), 1, missing_frac)==1
+  samples[missing] <- NA
+  return(samples)
 }
 
 simulate_gene_expression <- function(num_samples, num_genes) {
-    return(NULL)
+  set.seed(1337)
+  gene_exp <- matrix(
+    rnbinom(num_samples*num_genes, rlnorm(num_genes,meanlog = 3), prob=runif(num_genes)),
+    nrow=num_genes
+  )
+  return(gene_exp)
 }
 
 simulate_gene_expression_w_missing <- function(num_samples, num_genes, missing_frac=0.1) {
-    return(NULL)
+  gene_exp <- simulate_gene_expression(num_samples, num_genes)
+  missing <- matrix(
+    rbinom(num_samples*num_genes, 1, missing_frac)==1,
+    nrow=num_genes
+  )
+  gene_exp[missing] <- NA
+  return(gene_exp)
 }
+
